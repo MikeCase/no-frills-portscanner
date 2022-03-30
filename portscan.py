@@ -8,11 +8,27 @@ def quit():
     print("Exiting...")
     sys.exit()
 
-def do_ping():
+def do_ping(sender, app_data, user_data):
+
     """Will do the ping part of this application.
     Not yet implemented."""
+    ping_list = user_data
+    ping_list.clear()
+    dpg.configure_item("##result_list", items=ping_list)
     print("Pinging...")
-    raise NotImplementedError()
+    ip_start = dpg.get_value("ip_address_start")
+    ip_end = dpg.get_value("ip_address_end")
+    ip_range = ips(ip_start, ip_end)
+
+    for ip_address in ip_range:
+        resp = ping3.ping(ip_address, unit='ms')
+        if resp:
+            ping_list.append(f"{ip_address} OK! / Response time: {resp:.5f}ms\n")
+            dpg.configure_item('##result_list', items=ping_list)
+            # print(f"{ip_address} OK! / Response time: {resp}\n")
+
+
+    print("Pinging complete...")
 
 def ips(start, end):
     """Build IP range or if the IP in each IP box is the same
@@ -32,7 +48,7 @@ def scan(sender, app_data, user_data):
     if len(port_list) > 0:
         port_list.clear()
 
-    dpg.configure_item("##port_list", items=port_list)
+    dpg.configure_item("##result_list", items=port_list)
     dpg.configure_item("##scan_btn", enabled=False)
     
     low_port = dpg.get_value("low_port")
@@ -51,7 +67,7 @@ def scan(sender, app_data, user_data):
                     result = sckt.connect_ex((ip, port))
                     if result == 0:
                         port_list.append(f"Port {port} open!")
-                        dpg.configure_item('##port_list', items=port_list)
+                        dpg.configure_item('##result_list', items=port_list)
                     else:
                         pass
             except KeyboardInterrupt:
@@ -78,6 +94,7 @@ def scan(sender, app_data, user_data):
 def main():
     dpg.create_context()
     port_list = []
+    ping_list = []
 
     with dpg.value_registry():
         dpg.add_string_value(default_value="127.0.0.1", tag='ip_address_start')
@@ -101,9 +118,9 @@ def main():
         ## Group for buttons.        
         with dpg.group(horizontal=True):
             dpg.add_button(label="Scan", callback=scan, tag="##scan_btn", user_data=port_list)
-            dpg.add_button(label="Ping", callback=do_ping, tag="##ping_btn", user_data="Stuff")
+            dpg.add_button(label="Ping", callback=do_ping, tag="##ping_btn", user_data=ping_list)
 
-        dpg.add_listbox(label="##port_list", tag="##port_list", num_items=10)
+        dpg.add_listbox(label="##result_list", tag="##result_list", num_items=10)
         dpg.add_progress_bar(label="##Progress_Bar", default_value=0, tag='##Progress_Bar')
 
     dpg.create_viewport(title="PortScan", width=500, height=325)
