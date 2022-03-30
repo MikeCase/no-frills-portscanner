@@ -20,14 +20,15 @@ def do_ping(sender, app_data, user_data):
     ip_end = dpg.get_value("ip_address_end")
     ip_range = ips(ip_start, ip_end)
 
-    for ip_address in ip_range:
+    for idx, ip_address in enumerate(ip_range):
         resp = ping3.ping(ip_address, unit='ms')
         if resp:
             ping_list.append(f"{ip_address} OK! / Response time: {resp:.5f}ms\n")
             dpg.configure_item('##result_list', items=ping_list)
-            # print(f"{ip_address} OK! / Response time: {resp}\n")
 
-
+        dpg.set_value("##Progress_Bar", (idx/len(ip_range)))
+        dpg.configure_item("##Progress_Bar", overlay=f"{ip_address} / {round((idx/len(ip_range))*100)}%")
+    
     print("Pinging complete...")
 
 def ips(start, end):
@@ -120,7 +121,7 @@ def main():
             dpg.add_button(label="Scan", callback=scan, tag="##scan_btn", user_data=port_list)
             dpg.add_button(label="Ping", callback=do_ping, tag="##ping_btn", user_data=ping_list)
 
-        dpg.add_listbox(label="##result_list", tag="##result_list", num_items=10)
+        dpg.add_listbox(label="##result_list", tag="##result_list", num_items=10, width=350)
         dpg.add_progress_bar(label="##Progress_Bar", default_value=0, tag='##Progress_Bar')
 
     dpg.create_viewport(title="PortScan", width=500, height=325)
