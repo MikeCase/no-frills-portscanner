@@ -1,1 +1,2 @@
 dearpygui==1.4.0
+ping3==4.0.0
